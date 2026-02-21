@@ -1,0 +1,39 @@
+[project]
+name = "snapshotter"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "aio-pika>=9.5.8",
+    "alembic>=1.18.4",
+    "httpx>=0.28.1",
+    "loguru>=0.7.3",
+    "psycopg[binary]>=3.3.2",
+    "pydantic-settings>=2.12.0",
+    "sqlalchemy>=2.0.46",
+    "sqlalchemy-file>=0.6.0",
+]
+
+[tool.uv]
+managed = true
+
+[tool.ruff]
+line-length = 88
+target-version = "py314"
+
+[tool.ruff.lint]
+select = [
+    "E",   # errors
+    "W",   # warnings  
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+]
+
+fixable = ["ALL"]
+unfixable = []
+
+[tool.ruff.format]
+line-ending = "auto"

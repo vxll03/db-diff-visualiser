@@ -1,0 +1,108 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: db_broker
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - db_network
+
+  backend_db:
+    image: postgres:16-alpine
+    container_name: backend_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - backend_pg_data:/var/lib/postgresql/data
+    networks:
+      - db_network
+
+  backend:
+    build: 
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: db_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - RABBIT__URL=amqp://guest:guest@rabbitmq:5672/
+      - DB__HOST=backend_db
+      - DB__PORT=5432
+      - DB__USER=postgres
+      - DB__PASS=postgres
+      - DB__NAME=postgres
+      - SHARED_MIGRATIONS_DIR=/app/migrations_storage
+      - PYTHONPATH=/app:/app/src
+    volumes:
+      - shared_storage:/app/migrations_storage:rw
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      backend_db:
+        condition: service_healthy
+    networks:
+      - db_network
+
+  worker_db:
+    image: postgres:16-alpine
+    container_name: worker_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - worker_pg_data:/var/lib/postgresql/data
+    networks:
+      - db_network
+
+  worker:
+    build:
+      context: ../snapshotter
+      dockerfile: Dockerfile
+    environment:
+      - RABBIT__URL=amqp://guest:guest@rabbitmq:5672/
+      - PG_URL=postgresql+psycopg://postgres:postgres@worker_db:5432/postgres
+      - SHARED_MIGRATIONS_DIR=/app/migrations_storage
+      - ALEMBIC_INI_PATH=/app/alembic.ini
+      - PYTHONPATH=/app:/app/src
+    volumes:
+      - shared_storage:/app/migrations_storage:rw
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      worker_db:
+        condition: service_healthy
+    networks:
+      - db_network
+
+volumes:
+  backend_pg_data:
+  worker_pg_data:
+  shared_storage:
+
+networks:
+  db_network:
+    driver: bridge
