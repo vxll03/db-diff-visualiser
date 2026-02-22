@@ -1,7 +1,6 @@
 <template>
   <n-layout has-sider class="app-layout">
     <n-layout-sider
-      bordered
       :width="260"
       class="sidebar"
       content-class="sider-content"
@@ -144,6 +143,7 @@ const handleAccountAction = (key: string) => {
 
 .sidebar {
   background-color: $light-dark;
+  border-right: 2px solid $medium;
 }
 
 :deep(.sider-content) {
@@ -178,7 +178,7 @@ const handleAccountAction = (key: string) => {
 
   .account-btn {
     background-color: transparent;
-    border: 1px solid $gray;
+    border: 1px solid $light;
     border-radius: 8px;
     height: 44px;
     padding: 0 12px;
