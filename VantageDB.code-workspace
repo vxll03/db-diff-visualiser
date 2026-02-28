@@ -1,6 +1,10 @@
 {
   "folders": [
     {
+      "name": "Docs",
+      "path": "md"
+    },
+    {
       "name": "Github",
       "path": ".github"
     },
