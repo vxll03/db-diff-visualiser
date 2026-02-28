@@ -1,9 +1,9 @@
 from datetime import timedelta
 from typing import Sequence
 
-from sqlalchemy import Interval, cast, func, literal, select, text
+from sqlalchemy import Interval, cast, delete, func, literal, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload, selectinload
+from sqlalchemy.orm import joinedload
 
 from src.models.models import Project, Snapshot
 
@@ -19,6 +19,18 @@ class ProjectRepository:
         await self.db.commit()
         return project
 
+    async def update_project(self, id, **kwargs) -> Project | None:
+        stmt = (
+            update(Project).values(**kwargs).where(Project.id == id).returning(Project)
+        )
+        query = await self.db.execute(stmt)
+        await self.db.commit()
+        return query.scalar_one_or_none()
+
+    async def delete_project(self, id: int):
+        stmt = delete(Project).where(Project.id == id)
+        await self.db.execute(stmt)
+        await self.db.commit()
 
     async def create_snapshot(
         self,
@@ -48,8 +60,8 @@ class ProjectRepository:
             select(
                 Project,
                 func.count(Snapshot.id)
-                    .over(partition_by=Project.id)
-                    .label("snapshots_count"),
+                .over(partition_by=Project.id)
+                .label("snapshots_count"),
                 json_len_fallback("tables"),
                 json_len_fallback("views"),
                 json_len_fallback("triggers"),
@@ -139,7 +151,4 @@ class ProjectRepository:
 
         result = await self.db.execute(stmt)
 
-        return [
-            {"date": r.period.date(), "count": r.count}
-            for r in result.all()
-        ]
+        return [{"date": r.period.date(), "count": r.count} for r in result.all()]

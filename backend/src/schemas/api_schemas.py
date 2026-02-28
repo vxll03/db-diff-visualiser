@@ -25,6 +25,10 @@ class ProjectCreateSchema(BaseModel):
     name: str
     icon: str | None
 
+class ProjectUpdateSchema(BaseModel):
+    name: str | None = None
+    icon: str | None = None
+
 
 class ProjectResponseSchema(BaseOrmModel):
     id: int

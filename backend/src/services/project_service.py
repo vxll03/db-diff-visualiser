@@ -1,10 +1,11 @@
 from typing import Sequence
 
+from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.models import Project, Snapshot
 from src.repositories.project_repository import ProjectRepository
-from src.schemas.api_schemas import LatestSnapshotsResponseSchema
+from src.schemas.api_schemas import LatestSnapshotsResponseSchema, ProjectUpdateSchema
 
 
 class ProjectService:
@@ -13,6 +14,19 @@ class ProjectService:
 
     async def create_project(self, name: str, icon: str | None = None) -> Project:
         return await self._repo.create_project(name=name, icon=icon)
+
+    async def update_project(
+        self, project_id: int, schema: ProjectUpdateSchema
+    ) -> Project:
+        project = await self._repo.update_project(
+            id=project_id, **schema.model_dump(exclude_unset=True)
+        )
+        if not project:
+            raise HTTPException(404, "Project ont found")
+        return project
+
+    async def delete_project(self, project_id):
+        await self._repo.delete_project(id=project_id)
 
     async def create_snapshot(
         self,
