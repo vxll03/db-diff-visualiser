@@ -34,6 +34,7 @@ class RabbitService:
                     "project": task["project_name"],
                     "target_revision": task["revision"],
                     "prev_revision": task["down_revision"],
+                    "type": "alembic" # TODO Поменять когда буду делать Django
                 }
 
                 await channel.default_exchange.publish(
