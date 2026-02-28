@@ -51,6 +51,23 @@ export const useSchemaParser = () => {
     return arr.map((item) => (typeof item === 'string' ? item : (item as any)?.name || ''));
   };
 
+  const calculateNodeHeight = (node: Node<TableNodeData>) => {
+    let height = 42;
+
+    if (node.data.status === 'removed' && !node.data.columns?.length) {
+      height += 40;
+    } else {
+      height += (node.data.columns?.length || 0) * 36;
+    }
+
+    if (node.data.triggers?.length) {
+      height += 30;
+      height += node.data.triggers.length * 36;
+    }
+
+    return height + 4;
+  };
+
   const parseSchemaToFlow = (snapshot: SnapshotDetails | null | undefined) => {
     const nodes: Node<TableNodeData>[] = [];
     const edges: Edge[] = [];
@@ -88,6 +105,7 @@ export const useSchemaParser = () => {
       });
     });
 
+    // --- 2. ПАРСИНГ ТАБЛИЦ И КОЛОНОК ---
     tables.forEach((table) => {
       let tableStatus: TableNodeData['status'] = 'normal';
       if (isNameInList(table.name, diff.added_tables || [])) tableStatus = 'added';
@@ -170,24 +188,60 @@ export const useSchemaParser = () => {
       });
     });
 
-    const g = new dagre.graphlib.Graph();
-    g.setDefaultEdgeLabel(() => ({}));
-    g.setGraph({ rankdir: 'LR', ranksep: 250, nodesep: 60 });
-
-    nodes.forEach((node) => {
-      let height = 40 + (node.data.columns?.length || 0) * 35;
-      if (node.data.triggers?.length) height += 28 + node.data.triggers.length * 35;
-      g.setNode(node.id, { width: 250, height });
+    const connectedNodeIds = new Set<string>();
+    edges.forEach((e) => {
+      connectedNodeIds.add(e.source);
+      connectedNodeIds.add(e.target);
     });
 
-    edges.forEach((edge) => g.setEdge(edge.source, edge.target));
-    dagre.layout(g);
+    const connectedNodes = nodes.filter((n) => connectedNodeIds.has(n.id));
+    const disconnectedNodes = nodes.filter((n) => !connectedNodeIds.has(n.id));
 
-    nodes.forEach((node) => {
-      const dagreNode = g.node(node.id);
-      let height = 40 + (node.data.columns?.length || 0) * 35;
-      if (node.data.triggers?.length) height += 28 + node.data.triggers.length * 35;
-      node.position = { x: dagreNode.x - 125, y: dagreNode.y - height / 2 };
+    let maxDagreX = 0;
+
+    if (connectedNodes.length > 0) {
+      const g = new dagre.graphlib.Graph();
+      g.setDefaultEdgeLabel(() => ({}));
+      g.setGraph({ rankdir: 'LR', ranksep: 250, nodesep: 60 });
+
+      connectedNodes.forEach((node) => {
+        g.setNode(node.id, { width: 250, height: calculateNodeHeight(node) });
+      });
+
+      edges.forEach((edge) => g.setEdge(edge.source, edge.target));
+      dagre.layout(g);
+
+      connectedNodes.forEach((node) => {
+        const dagreNode = g.node(node.id);
+        const h = calculateNodeHeight(node);
+        node.position = { x: dagreNode.x - 125, y: dagreNode.y - h / 2 };
+        if (node.position.x > maxDagreX) maxDagreX = node.position.x;
+      });
+    }
+
+    const GRID_START_X = connectedNodes.length > 0 ? maxDagreX + 400 : 0;
+    const GRID_START_Y = 0;
+    const COLUMNS = 4;
+    const NODE_WIDTH = 250;
+    const X_GAP = 50;
+    const Y_GAP = 60;
+
+    let currentX = GRID_START_X;
+    let currentY = GRID_START_Y;
+    let rowMaxHeight = 0;
+
+    disconnectedNodes.forEach((node, index) => {
+      const h = calculateNodeHeight(node);
+      node.position = { x: currentX, y: currentY };
+      rowMaxHeight = Math.max(rowMaxHeight, h);
+
+      if ((index + 1) % COLUMNS === 0) {
+        currentX = GRID_START_X;
+        currentY += rowMaxHeight + Y_GAP;
+        rowMaxHeight = 0;
+      } else {
+        currentX += NODE_WIDTH + X_GAP;
+      }
     });
 
     return { nodes, edges };
