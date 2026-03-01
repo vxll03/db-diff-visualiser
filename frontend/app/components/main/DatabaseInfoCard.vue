@@ -8,7 +8,7 @@
     </template>
     <template #header-extra>
       <span class="active-count">
-        <b>{{ projects?.filter((p) => !p._isDeleting).length || 0 }}</b> Active Projects
+        <b>{{ projects?.filter((p: any) => !p._isDeleting).length || 0 }}</b> Active Projects
       </span>
     </template>
 
@@ -18,7 +18,7 @@
 
     <div v-else class="flat-projects-list">
       <template v-for="project in projects" :key="project.id">
-        <div v-show="!project._isDeleting" class="flat-card">
+        <div v-show="!(project as any)._isDeleting" class="flat-card">
           <div class="card-header">
             <div class="title-group">
               <Icon :name="project.icon || 'ph:database'" size="22" class="project-icon" />
@@ -105,12 +105,12 @@
   };
 
   const executeDelete = (project: any) => {
-    project._isDeleting = true;
+    (project as any)._isDeleting = true;
     pendingDeleteId.value = null;
 
     deleteProjectMutate(project.id, {
       onError: () => {
-        project._isDeleting = false;
+        (project as any)._isDeleting = false;
         message.error('Failed to delete project')
       }
     });

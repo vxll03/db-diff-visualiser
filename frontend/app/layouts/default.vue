@@ -44,12 +44,12 @@
 
 <script setup lang="ts">
   import type { MenuOption } from 'naive-ui';
-  import { Icon } from '#components';
   import { useProjectsQuery } from '@/composables/useProjects';
-
+  
   const route = useRoute();
   const NuxtLink = resolveComponent('NuxtLink');
-
+  const Icon = resolveComponent('Icon');
+  
   const renderIcon = (iconName: string) => {
     return () => h(Icon, { name: iconName, size: '18' });
   };

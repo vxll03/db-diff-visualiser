@@ -71,6 +71,7 @@
 <script setup lang="ts">
   import { ref } from 'vue';
   import { useCreateProject } from '~/composables/useProjects';
+  import type { FormInst } from 'naive-ui'
 
   const show = defineModel<boolean>('show', { default: false });
   const showIconPicker = ref(false);
@@ -94,7 +95,7 @@
     showIconPicker.value = false;
   };
 
-  const formRef = ref(null);
+  const formRef = ref<FormInst | null>(null);
   const formData = ref({
     name: '',
     icon: '',

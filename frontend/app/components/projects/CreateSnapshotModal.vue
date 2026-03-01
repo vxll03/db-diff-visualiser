@@ -59,7 +59,7 @@
 
   const rules = {
     fileList: {
-      type: 'array',
+      type: 'array' as const,
       required: true,
       min: 1,
       message: 'Please upload a migration file',

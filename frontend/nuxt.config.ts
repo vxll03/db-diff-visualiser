@@ -7,7 +7,7 @@ export default defineNuxtConfig({
   
   runtimeConfig: {
     public: {
-      apiBaseUrl: process.env.API_BASE_URL || 'http://127.0.0.1:8000/api',
+      apiBaseUrl: process.env.API_BASE_URL,
     },
   },
   
@@ -28,12 +28,6 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   
    css: ['~/assets/styles/main.scss'],
-
-  runtimeConfig: {
-    public: {
-      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000/api',
-    },
-  },
 
   alias: {
     '@styles': fileURLToPath(new URL('./assets/styles', import.meta.url)),

@@ -54,15 +54,15 @@ export const useSchemaParser = () => {
   const calculateNodeHeight = (node: Node<TableNodeData>) => {
     let height = 42;
 
-    if (node.data.status === 'removed' && !node.data.columns?.length) {
+    if (node.data!.status === 'removed' && !node.data!.columns?.length) {
       height += 40;
     } else {
-      height += (node.data.columns?.length || 0) * 36;
+      height += (node.data!.columns?.length || 0) * 36;
     }
 
-    if (node.data.triggers?.length) {
+    if (node.data!.triggers?.length) {
       height += 30;
-      height += node.data.triggers.length * 36;
+      height += node.data!.triggers.length * 36;
     }
 
     return height + 4;
@@ -97,7 +97,7 @@ export const useSchemaParser = () => {
         oldDef = trgDiff.changed[trgName].old;
       }
 
-      triggersByTable[t.table].push({
+      triggersByTable[t.table]!.push({
         name: trgName,
         status,
         definition: t.definition,
@@ -105,17 +105,16 @@ export const useSchemaParser = () => {
       });
     });
 
-    // --- 2. ПАРСИНГ ТАБЛИЦ И КОЛОНОК ---
-    tables.forEach((table) => {
+    tables.forEach((table: any) => {
       let tableStatus: TableNodeData['status'] = 'normal';
       if (isNameInList(table.name, diff.added_tables || [])) tableStatus = 'added';
       else if (diff.changed_tables?.[table.name]) tableStatus = 'changed';
 
       const changes = diff.changed_tables?.[table.name] || {};
-      const addedColNames = extractNames(changes.added_columns);
-      const removedColNames = extractNames(changes.removed_columns);
+      const addedColNames = extractNames((changes as any).added_columns);
+      const removedColNames = extractNames((changes as any).removed_columns);
 
-      const processedColumns: ColumnNodeData[] = (table.columns || []).map((col) => {
+      const processedColumns: ColumnNodeData[] = (table.columns || []).map((col: any) => {
         let colStatus: ColumnNodeData['status'] = 'normal';
         const changeDetails: string[] = [];
 
@@ -123,7 +122,7 @@ export const useSchemaParser = () => {
           colStatus = 'added';
         } else if (changes.changed_columns?.[col.name]) {
           colStatus = 'changed';
-          const colDiff = changes.changed_columns[col.name];
+          const colDiff: any = changes.changed_columns[col.name];
 
           if (colDiff?.type) changeDetails.push(`Type: ${colDiff.type.old} → ${colDiff.type.new}`);
           if (colDiff?.nullable !== undefined) {
@@ -159,8 +158,8 @@ export const useSchemaParser = () => {
       });
 
       if (table.foreign_keys && table.foreign_keys.length > 0) {
-        table.foreign_keys.forEach((fk) => {
-          fk.constrained_columns.forEach((sourceCol, index) => {
+        table.foreign_keys.forEach((fk: any) => {
+          fk.constrained_columns.forEach((sourceCol: any, index: number) => {
             const targetCol = fk.referred_columns[index];
             edges.push({
               id: `fk-${table.name}-${sourceCol}-${fk.referred_table}-${targetCol}`,
@@ -262,7 +261,7 @@ export const useSchemaParser = () => {
     const isNested = 'views' in diffData || 'materialized_views' in diffData;
 
     const getDiffFor = (key: 'views' | 'materialized_views') => {
-      if (isNested) return extractDiffSafe(diffData[key]);
+      if (isNested) return extractDiffSafe((diffData as any)[key]);
       return extractDiffSafe(diffData);
     };
 

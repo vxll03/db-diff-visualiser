@@ -59,7 +59,7 @@
 
   watch(snapshots, (newSnaps) => {
     if (newSnaps?.length && !revisionId.value) {
-      revisionId.value = newSnaps[0].id;
+      revisionId.value = newSnaps[newSnaps.length - 1]!.id;
       emit('selectRevision');
     }
   });

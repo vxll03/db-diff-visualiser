@@ -3,7 +3,8 @@ import { ofetch } from 'ofetch';
 const config = useRuntimeConfig()
 
 export const apiClient = ofetch.create({
-  baseURL: config.public.apiBaseUrl,
+  // baseURL: config.public.apiBaseUrl,
+  baseURL: '/api',
   
   async onRequest({ request, options }) {
   },

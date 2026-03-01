@@ -37,13 +37,16 @@ services:
     container_name: db_backend
     ports:
       - "8000:8000"
+    env_file:
+      - .env
     environment:
       - RABBIT__URL=amqp://guest:guest@rabbitmq:5672/
       - DB__HOST=backend_db
       - DB__PORT=5432
-      - DB__USER=postgres
-      - DB__PASS=postgres
-      - DB__NAME=postgres
+      - DB__USER=${DB__USER}
+      - DB__PASS=${DB__PASS}
+      - DB__NAME=${DB__NAME}
+      # - CORS_ORIGINS=["frontend"]
       - SHARED_MIGRATIONS_DIR=/app/migrations_storage
       - PYTHONPATH=/app:/app/src
     volumes:
@@ -53,6 +56,15 @@ services:
         condition: service_healthy
       backend_db:
         condition: service_healthy
+    networks:
+      - db_network
+
+  front:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
     networks:
       - db_network
 

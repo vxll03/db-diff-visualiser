@@ -21,8 +21,8 @@
   const chartOption = computed(() => {
     const sourceData = stats.value || [];
 
-    const xAxisData = sourceData.map((item) => item.date);
-    const seriesData = sourceData.map((item) => item.count);
+    const xAxisData = sourceData.map((item: any) => item.date);
+    const seriesData = sourceData.map((item: any) => item.count);
 
     return {
       tooltip: {

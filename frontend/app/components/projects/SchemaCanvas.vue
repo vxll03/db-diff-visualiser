@@ -159,46 +159,24 @@
         <Panel position="bottom-right" class="controls-panel">
           <div class="panel-layout">
             <n-button-group vertical class="canvas-controls">
-              <n-tooltip placement="left" trigger="hover">
-                <template #trigger>
-                  <n-button quaternary>
-                    <template #icon><Icon name="ph:lightning" /></template>
+                <n-button
+                  :type="canvasMode === 'views' ? 'primary' : 'default'"
+                  quaternary
+                  @click="canvasMode = 'views'"
+                >
+                  <template #icon><Icon name="ph:eye" /></template>
+                  Views
                   </n-button>
-                </template>
-                Triggers
-              </n-tooltip>
-
-              <n-tooltip placement="left" trigger="hover">
-                <template #trigger>
-                  <n-button
-                    :type="canvasMode === 'views' ? 'primary' : 'default'"
-                    quaternary
-                    @click="canvasMode = 'views'"
-                  >
-                    <template #icon><Icon name="ph:eye" /></template>
-                  </n-button>
-                </template>
-                Views
-              </n-tooltip>
-
-              <n-tooltip placement="left" trigger="hover">
-                <template #trigger>
-                  <n-button quaternary>
-                    <template #icon><Icon name="ph:file-code" /></template>
-                  </n-button>
-                </template>
-                Files
-              </n-tooltip>
             </n-button-group>
 
             <n-button-group class="canvas-controls">
-              <n-button quaternary @click="zoomOut">
+              <n-button quaternary @click="() => zoomOut()">
                 <template #icon><Icon name="ph:magnifying-glass-minus" /></template>
               </n-button>
-              <n-button quaternary @click="zoomIn">
+              <n-button quaternary @click="() => zoomIn()">
                 <template #icon><Icon name="ph:magnifying-glass-plus" /></template>
               </n-button>
-              <n-button quaternary @click="fitView">
+              <n-button quaternary @click="() => fitView()">
                 <template #icon><Icon name="ph:corners-out" /></template>
               </n-button>
             </n-button-group>
@@ -229,7 +207,7 @@
 
   const canvasMode = ref<'tables' | 'views'>('tables');
 
-  const nodes = defineModel<Node<TableNodeData>[]>('nodes', { default: () => [] });
+  const nodes = defineModel<Node<TableNodeData | ViewNodeData>[]>('nodes', { default: () => [] });
   const edges = defineModel<Edge[]>('edges', { default: () => [] });
   const revisionId = defineModel<number | null>('revisionId');
 
@@ -238,7 +216,7 @@
 
   const { data: currentSchemaData, isLoading: isLoadingDetails } = useSnapshotDetailsQuery(
     Number.parseInt(projectId),
-    revisionId,
+    revisionId as Ref<number | null>,
   );
 
   watch([currentSchemaData, canvasMode], ([newData, mode]) => {
@@ -246,8 +224,8 @@
       try {
         const flowData = mode === 'tables' ? parseSchemaToFlow(newData) : parseViewsToFlow(newData);
 
-        nodes.value = flowData.nodes;
-        edges.value = flowData.edges;
+        nodes.value = flowData.nodes as any;
+        edges.value = flowData.edges as any;
 
         setTimeout(() => {
           if (mode === 'tables') updateHandles();
