@@ -7,8 +7,8 @@ from fastapi import HTTPException, UploadFile
 from loguru import logger
 
 from src.core.config import settings
-from src.schemas.rabbit_schemas import IncomingMessageSchema
-from src.services.project_service import ProjectService
+from src.domains.project.services.project_service import ProjectService
+from src.domains.broker.rabbit_schemas import IncomingMessageSchema
 
 
 class FileService:

@@ -6,10 +6,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
 from src.core.config import settings
-from src.routes.migration_routes import router as migration_router
-from src.routes.project_routes import router as project_router
-from src.routes.snapshot_routes import router as snapshot_router
-from src.services.rabbit_service import RabbitService
+from src.domains.broker.broker_routes import router as broker_router
+from src.domains.broker.services.rabbit_service import RabbitService
+from src.domains.project.project_routes import router as project_router
+from src.domains.project.snapshot_routes import router as snapshot_router
 
 rabbit_service = RabbitService()
 
@@ -25,6 +25,7 @@ async def lifespan(app: FastAPI):
         await consumer_task
     except asyncio.CancelledError:
         logger.info("Consumer task cancelled successfully.")
+    await rabbit_service.close_connection()
 
 
 app = FastAPI(
@@ -42,8 +43,8 @@ app.add_middleware(
 )
 
 app_router = APIRouter(prefix="/api")
-app_router.include_router(migration_router, prefix="/migrations", tags=['Migration'])
-app_router.include_router(project_router, prefix="/projects", tags=['Project'])
-app_router.include_router(snapshot_router, prefix="/snapshots", tags=['Snapshot'])
+app_router.include_router(broker_router, prefix="/migrations", tags=["Migration"])
+app_router.include_router(project_router, prefix="/projects", tags=["Project"])
+app_router.include_router(snapshot_router, prefix="/snapshots", tags=["Snapshot"])
 
 app.include_router(app_router)

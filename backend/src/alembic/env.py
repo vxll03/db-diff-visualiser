@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from src.core.config import settings
 from src.core.database import DbModel
-from src.models import models  # noqa
+from src.domains.project import models  # noqa
 
 config = context.config
 

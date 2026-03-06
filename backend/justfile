@@ -1,0 +1,32 @@
+set shell := ["powershell.exe", "-Command"]
+
+app_module := "src.main:app"
+
+@default:
+    just --list
+
+help:
+    @just --list
+
+install:
+    uv sync
+
+run port="8000":
+    uv run uvicorn {{app_module}} --port {{port}}
+
+migrate:
+    uv run alembic upgrade head
+
+downgrade size="1":
+    uv run alembic downgrade -{{size}}
+
+revision msg="":
+    uv run alembic revision --autogenerate -m "{{msg}}"
+
+test:
+    uv run pytest -q
+
+clean:
+    if (Test-Path .pytest_cache) { Remove-Item -Recurse -Force .pytest_cache }
+    if (Test-Path .ruff_cache) { Remove-Item -Recurse -Force .ruff_cache }
+    Get-ChildItem -Path . -Include __pycache__ -Recurse | Remove-Item -Recurse -Force

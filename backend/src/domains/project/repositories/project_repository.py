@@ -6,7 +6,7 @@ from sqlalchemy import Interval, cast, delete, func, literal, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
-from src.models.models import Project, Snapshot
+from src.domains.project.models import Project, Snapshot
 
 
 class ProjectRepository:

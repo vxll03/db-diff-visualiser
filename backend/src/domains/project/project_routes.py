@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from src.dependencies import ProjectServiceDep
-from src.schemas.api_schemas import (
+from src.domains.project.api_schemas import (
     ProjectCreateSchema,
     ProjectResponseSchema,
     ProjectStatsResponseSchema,
