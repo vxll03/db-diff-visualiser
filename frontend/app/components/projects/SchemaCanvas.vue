@@ -188,7 +188,7 @@
 </template>
 
 <script setup lang="ts">
-  import { generateSqlDiff, type DiffLine } from '~/utils/diffFormatter';
+  import { generateSqlDiff } from '~/utils/diffFormatter';
   import '@vue-flow/core/dist/style.css';
   import '@vue-flow/core/dist/theme-default.css';
   import {
@@ -199,8 +199,27 @@
     Position,
     type Node,
     type Edge,
+    type NodeDragEvent,
   } from '@vue-flow/core';
   import { Background } from '@vue-flow/background';
+  import type { TableNodeData, ViewNodeData } from '@/schemas/parser.schema';
+  import {
+    TABLE_NODE_WIDTH,
+    VIEW_NODE_WIDTH,
+    TABLE_HEADER_HEIGHT,
+    COLUMN_ROW_HEIGHT,
+    TRIGGERS_HEADER_HEIGHT,
+    TRIGGER_ROW_HEIGHT,
+    TABLE_REMOVED_PLACEHOLDER_HEIGHT,
+  } from '@/utils/parser/layout';
+
+  const tableWidth = ref(`${TABLE_NODE_WIDTH}px`);
+  const viewWidth = ref(`${VIEW_NODE_WIDTH}px`);
+  const headerHeight = ref(`${TABLE_HEADER_HEIGHT}px`);
+  const colHeight = ref(`${COLUMN_ROW_HEIGHT}px`);
+  const trgHeaderHeight = ref(`${TRIGGERS_HEADER_HEIGHT}px`);
+  const trgRowHeight = ref(`${TRIGGER_ROW_HEIGHT}px`);
+  const removedHeight = ref(`${TABLE_REMOVED_PLACEHOLDER_HEIGHT}px`);
 
   const { parseSchemaToFlow, parseViewsToFlow } = useSchemaParser();
   const { zoomIn, zoomOut, fitView, onNodeDrag } = useVueFlow();
@@ -224,8 +243,8 @@
       try {
         const flowData = mode === 'tables' ? parseSchemaToFlow(newData) : parseViewsToFlow(newData);
 
-        nodes.value = flowData.nodes as any;
-        edges.value = flowData.edges as any;
+        nodes.value = flowData.nodes as Node<TableNodeData | ViewNodeData>[];
+        edges.value = flowData.edges as Edge[];
 
         setTimeout(() => {
           if (mode === 'tables') updateHandles();
@@ -237,19 +256,51 @@
     }
   });
 
-  const updateHandles = () => {
-    edges.value.forEach((edge) => {
+  const getNodeWidth = (node: Node<TableNodeData | ViewNodeData>) =>
+    node.type === 'customView' ? VIEW_NODE_WIDTH : TABLE_NODE_WIDTH;
+
+  const updateHandles = (draggedEvent?: NodeDragEvent) => {
+    const GAP_THRESHOLD = 25;
+    const draggedNodeId = draggedEvent?.node?.id;
+
+    const edgesToUpdate = draggedNodeId
+      ? edges.value.filter((e) => e.source === draggedNodeId || e.target === draggedNodeId)
+      : edges.value;
+
+    edgesToUpdate.forEach((edge) => {
       const sNode = nodes.value.find((n) => n.id === edge.source);
       const tNode = nodes.value.find((n) => n.id === edge.target);
 
-      if (sNode && tNode) {
-        if (sNode.position.x > tNode.position.x) {
-          edge.sourceHandle = `${edge.data.sourceCol}-source-left`;
-          edge.targetHandle = `${edge.data.targetCol}-target-right`;
-        } else {
+      if (!sNode || !tNode) return;
+
+      if (sNode.id === tNode.id) {
+        edge.sourceHandle = `${edge.data.sourceCol}-source-right`;
+        edge.targetHandle = `${edge.data.targetCol}-target-right`;
+        return;
+      }
+
+      const sWidth = getNodeWidth(sNode);
+      const tWidth = getNodeWidth(tNode);
+
+      const isSourceLeft = sNode.position.x <= tNode.position.x;
+
+      const lt = isSourceLeft ? sNode : tNode;
+      const pt = isSourceLeft ? tNode : sNode;
+      const ltWidth = isSourceLeft ? sWidth : tWidth;
+
+      const gap = pt.position.x - (lt.position.x + ltWidth);
+
+      if (gap > GAP_THRESHOLD) {
+        if (isSourceLeft) {
           edge.sourceHandle = `${edge.data.sourceCol}-source-right`;
           edge.targetHandle = `${edge.data.targetCol}-target-left`;
+        } else {
+          edge.sourceHandle = `${edge.data.sourceCol}-source-left`;
+          edge.targetHandle = `${edge.data.targetCol}-target-right`;
         }
+      } else {
+        edge.sourceHandle = `${edge.data.sourceCol}-source-right`;
+        edge.targetHandle = `${edge.data.targetCol}-target-right`;
       }
     });
   };
@@ -258,6 +309,9 @@
 </script>
 
 <style lang="scss" scoped>
+  $status-removed: #d03050;
+  $status-changed: #2080f0;
+
   .canvas-wrapper {
     flex: 1 1 auto;
     position: relative;
@@ -276,27 +330,46 @@
   }
 
   .table-node {
-    width: 250px;
-    background-color: #1e2320;
-    border: 1px solid #3b3c3d;
+    width: v-bind(tableWidth);
+    background-color: $medium;
+    border: 1px solid $light;
     border-radius: 8px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 6px -1px rgba($black, 0.3);
     user-select: none;
+    overflow: hidden;
 
     :deep(.n-card-header) {
-      padding: 8px 12px;
-      background-color: rgba(255, 255, 255, 0.03);
-      border-bottom: 1px solid #3b3c3d;
+      height: v-bind(headerHeight);
+      box-sizing: border-box;
+      background-color: rgba($white, 0.03);
+      border-bottom: 1px solid $light;
     }
 
     :deep(.n-card-header__main) {
-      font-size: 0.9rem;
-      color: #eaebeb;
+      font-size: $font-m;
+      color: $white-secondary;
       font-weight: 600;
     }
 
     :deep(.n-card__content) {
       padding: 0;
+    }
+
+    // Модификаторы статуса таблицы
+    &.status-added {
+      border-color: rgba($accent, 0.5);
+      box-shadow: 0 0 15px rgba($accent, 0.1);
+    }
+    &.status-removed {
+      border-color: rgba($status-removed, 0.5);
+      opacity: 0.7;
+      :deep(.n-card-header__main) {
+        text-decoration: line-through;
+        color: $status-removed;
+      }
+    }
+    &.status-changed {
+      border-color: rgba($status-changed, 0.4);
     }
   }
 
@@ -304,22 +377,54 @@
     display: flex;
     flex-direction: column;
   }
+
   .column-row {
+    min-height: v-bind(colHeight);
+    box-sizing: border-box;
     position: relative;
     display: flex;
+    align-items: center;
     justify-content: space-between;
-    padding: 8px 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-    font-size: 0.8rem;
+    padding: 6px 12px;
+    gap: 12px;
+    border-bottom: 1px solid rgba($white, 0.03);
+    font-size: $font-s;
+
     &:last-child {
       border-bottom: none;
     }
+
     .col-name {
-      color: #eaebeb;
+      color: $white-secondary;
+      flex: 1 1 auto;
+      word-break: break-word;
+      line-height: 1.2;
     }
+
     .col-type {
-      color: #727379;
-      font-size: 0.75rem;
+      color: $gray;
+      font-size: $font-xs;
+      flex: 0 0 auto;
+      max-width: 45%;
+      text-align: right;
+      word-break: break-word;
+      line-height: 1.2;
+    }
+
+    // Модификаторы статуса колонки
+    &.status-added {
+      background-color: rgba($accent, 0.15);
+    }
+    &.status-removed {
+      background-color: rgba($status-removed, 0.15);
+      .col-name,
+      .col-type {
+        text-decoration: line-through;
+        opacity: 0.6;
+      }
+    }
+    &.status-changed {
+      background-color: rgba($status-changed, 0.15);
     }
   }
 
@@ -337,49 +442,15 @@
     }
   }
 
-  .table-node {
-    &.status-added {
-      border-color: rgba(17, 175, 116, 0.5);
-      box-shadow: 0 0 15px rgba(17, 175, 116, 0.1);
-    }
-    &.status-removed {
-      border-color: rgba(208, 48, 80, 0.5);
-      opacity: 0.7;
-      :deep(.n-card-header__main) {
-        text-decoration: line-through;
-        color: #d03050;
-      }
-    }
-    &.status-changed {
-      border-color: rgba(32, 128, 240, 0.4);
-    }
-  }
-
   .removed-placeholder {
-    padding: 12px;
+    height: v-bind(removedHeight);
+    box-sizing: border-box;
     text-align: center;
-    color: #d03050;
-    font-size: 0.75rem;
+    color: $status-removed;
+    font-size: $font-xs;
     font-weight: bold;
     letter-spacing: 1px;
     text-transform: uppercase;
-  }
-
-  .column-row {
-    &.status-added {
-      background-color: rgba(17, 175, 116, 0.15);
-    }
-    &.status-removed {
-      background-color: rgba(208, 48, 80, 0.15);
-      .col-name,
-      .col-type {
-        text-decoration: line-through;
-        opacity: 0.6;
-      }
-    }
-    &.status-changed {
-      background-color: rgba(32, 128, 240, 0.15);
-    }
   }
 
   .panel-layout {
@@ -395,16 +466,17 @@
   }
 
   .view-node {
-    width: 300px;
-    background-color: #1e2320;
-    border: 1px solid #3b3c3d;
+    width: v-bind(viewWidth);
+    background-color: $medium;
+    border: 1px solid $light;
     border-radius: 8px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 6px -1px rgba($black, 0.3);
+    overflow: hidden;
 
     :deep(.n-card-header) {
       padding: 12px;
-      background-color: rgba(255, 255, 255, 0.03);
-      border-bottom: 1px solid #3b3c3d;
+      background-color: rgba($white, 0.03);
+      border-bottom: 1px solid $light;
     }
 
     .view-header {
@@ -412,44 +484,26 @@
       align-items: center;
       gap: 8px;
       font-size: 0.95rem;
-      color: #eaebeb;
+      color: $white-secondary;
       font-weight: 600;
     }
 
-    .view-content {
-      padding: 16px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-
-      .sql-badge {
-        font-size: 0.75rem;
-        padding: 4px 8px;
-        background-color: rgba(255, 255, 255, 0.1);
-        border-radius: 4px;
-        color: #a0a0a0;
-      }
-    }
-
+    // Модификаторы статуса View
     &.status-added {
-      border-color: rgba(17, 175, 116, 0.5);
-      box-shadow: 0 0 15px rgba(17, 175, 116, 0.1);
+      border-color: rgba($accent, 0.5);
+      box-shadow: 0 0 15px rgba($accent, 0.1);
     }
     &.status-removed {
-      border-color: rgba(208, 48, 80, 0.5);
+      border-color: rgba($status-removed, 0.5);
       opacity: 0.7;
       .view-header span {
         text-decoration: line-through;
-        color: #d03050;
+        color: $status-removed;
       }
     }
     &.status-changed {
-      border-color: rgba(32, 128, 240, 0.4);
+      border-color: rgba($status-changed, 0.4);
     }
-  }
-
-  .top-panel {
-    margin: 16px;
   }
 
   .view-content {
@@ -459,29 +513,33 @@
     align-items: center;
 
     .sql-badge {
-      font-size: 0.75rem;
+      font-size: $font-xs;
       padding: 6px 12px;
-      background-color: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background-color: rgba($white, 0.05);
+      border: 1px solid rgba($white, 0.1);
       border-radius: 6px;
-      color: #eaebeb;
+      color: $white-secondary;
       cursor: pointer;
       transition: all 0.2s ease;
 
       &:hover {
-        background-color: rgba(255, 255, 255, 0.1);
-        border-color: rgba(255, 255, 255, 0.2);
+        background-color: rgba($white, 0.1);
+        border-color: rgba($white, 0.2);
       }
     }
   }
 
+  .top-panel {
+    margin: 16px;
+  }
+
   .diff-container {
-    font-family: var(--n-font-family-mono); // Моноширинный шрифт Naive UI
-    font-size: 0.8rem;
+    font-family: var(--n-font-family-mono);
+    font-size: $font-s;
     line-height: 1.4;
-    white-space: pre-wrap; // Сохраняем пробелы и переносы
+    white-space: pre-wrap;
     word-break: break-word;
-    background-color: #111;
+    background-color: $dark;
     padding: 8px 0;
     border-radius: 4px;
 
@@ -489,37 +547,39 @@
       padding: 0 12px;
 
       &.line-added {
-        background-color: rgba(17, 175, 116, 0.15); // Прозрачный зеленый
-        color: #1fd08c;
+        background-color: rgba($accent, 0.15);
+        color: lighten($accent, 15%);
       }
       &.line-removed {
-        background-color: rgba(208, 48, 80, 0.15); // Прозрачный красный
-        color: #ea607e;
+        background-color: rgba($status-removed, 0.15);
+        color: lighten($status-removed, 15%);
       }
       &.line-common {
-        color: #a0a0a0;
+        color: $gray;
       }
     }
 
     .diff-empty {
       padding: 0 12px;
-      color: #666;
+      color: $gray;
       font-style: italic;
     }
   }
 
   .triggers-section {
-    border-top: 1px solid rgba(255, 255, 255, 0.03);
-    background-color: rgba(0, 0, 0, 0.15);
+    border-top: 1px solid rgba($white, 0.03);
+    background-color: rgba($black, 0.15);
   }
 
   .triggers-header {
-    padding: 6px 12px;
+    height: v-bind(trgHeaderHeight);
+    box-sizing: border-box;
     font-size: 0.7rem;
-    color: #a0a0a0;
+    color: $gray;
     display: flex;
     align-items: center;
     gap: 6px;
+    padding: 0 8px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -531,16 +591,18 @@
   }
 
   .trigger-row {
+    height: v-bind(trgRowHeight);
+    box-sizing: border-box;
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+    padding: 0 8px;
+    border-bottom: 1px solid rgba($white, 0.02);
     cursor: pointer;
     transition: background-color 0.2s;
 
     &:hover {
-      background-color: rgba(255, 255, 255, 0.05);
+      background-color: rgba($white, 0.05);
     }
     &:last-child {
       border-bottom: none;
@@ -552,20 +614,21 @@
     }
 
     .trg-name {
-      color: #eaebeb;
-      font-size: 0.75rem;
+      color: $white-secondary;
+      font-size: $font-xs;
       font-family: var(--n-font-family-mono);
     }
 
+    // Модификаторы статуса триггера
     &.status-added {
-      background-color: rgba(17, 175, 116, 0.15);
+      background-color: rgba($accent, 0.15);
     }
     &.status-removed {
-      background-color: rgba(208, 48, 80, 0.15);
+      background-color: rgba($status-removed, 0.15);
       opacity: 0.6;
     }
     &.status-changed {
-      background-color: rgba(32, 128, 240, 0.15);
+      background-color: rgba($status-changed, 0.15);
     }
   }
 </style>

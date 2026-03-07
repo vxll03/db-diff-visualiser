@@ -149,7 +149,7 @@ class ProjectRepository:
         stmt = (
             select(Snapshot)
             .options(joinedload(Snapshot.project))
-            .order_by(Snapshot.id.desc())
+            .order_by(Snapshot.created_at.desc())
             .limit(limit)
         )
         result = await self.db.execute(stmt)

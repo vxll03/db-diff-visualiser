@@ -37,6 +37,8 @@ export default defineNuxtConfig({
     '@layouts': fileURLToPath(new URL('./layouts', import.meta.url)),
     '@pages': fileURLToPath(new URL('./pages', import.meta.url)),
     '@composables': fileURLToPath(new URL('./composables', import.meta.url)),
+    '@utils': fileURLToPath(new URL('./utils', import.meta.url)),
+    '@schemas': fileURLToPath(new URL('./schemas', import.meta.url)),
   },
 
   devServer: {

@@ -1,15 +1,11 @@
 import { ofetch } from 'ofetch';
 
-const config = useRuntimeConfig();
 
-export const apiClient = ofetch.create({
-  // For local develop
-  baseURL: config.public.apiBaseUrl,
-
-  // For Nginx
-  // baseURL: '/api'
-
-  async onRequest({ request, options }) {},
+export const apiClient = ofetch.create({  
+  async onRequest({ request, options }) {
+    const config = useRuntimeConfig();
+    options.baseURL = config.public.apiBaseUrl as string;
+  },
 
   async onResponseError({ request, response, options }) {
     console.error('[API Error]', response.status, response._data);
