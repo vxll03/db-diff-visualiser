@@ -10,6 +10,6 @@
   </n-config-provider>
 </template>
 <script setup lang="ts">
-import { ruRU, dateRuRU } from 'naive-ui'
-import { naiveThemeOverrides } from '~/theme/naive-theme-dark'
+  import { ruRU, dateRuRU } from 'naive-ui';
+  import { naiveThemeOverrides } from '~/theme/naive-theme-dark';
 </script>

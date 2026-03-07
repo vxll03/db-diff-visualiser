@@ -16,5 +16,3 @@ export const ProjectSchema = z.object({
 
 export const ApiProjectsSchema = z.array(ProjectSchema);
 export type Project = z.infer<typeof ProjectSchema>;
-
-

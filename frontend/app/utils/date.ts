@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 
 /**
- * По умолчанию возвращает 'Feb 22, 2026'
+ * Returns 'Feb 22, 2026'
  */
 export const formatDate = (date: string | Date | null, formatStr: string = 'MMM D, YYYY') => {
   if (!date) return '';
@@ -9,7 +9,7 @@ export const formatDate = (date: string | Date | null, formatStr: string = 'MMM 
 };
 
 /**
- * Возвращает 'Feb 22, 14:30'
+ * Returns 'Feb 22, 14:30'
  */
 export const formatDateTime = (date: string | Date | null) => {
   if (!date) return '';

@@ -53,7 +53,7 @@
   const selectRevision = (revId: number) => {
     if (revisionId.value !== revId) {
       revisionId.value = revId;
-      emit('selectRevision');
+      emit('selectRevision', revId);
     }
   };
 

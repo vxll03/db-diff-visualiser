@@ -1,7 +1,7 @@
 from fastapi import APIRouter, UploadFile
 
 from src.dependencies import FileServiceDep, RabbitServiceDep
-from src.schemas.api_schemas import (
+from src.domains.project.api_schemas import (
     MigrationUploadResponseSchema,
 )
 from src.utils.enums import RabbitTaskStatus

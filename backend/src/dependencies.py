@@ -3,9 +3,9 @@ from typing import Annotated
 from fastapi import Depends
 
 from src.core.database import DatabaseDep
-from src.services.file_service import FileService
-from src.services.project_service import ProjectService
-from src.services.rabbit_service import RabbitService
+from src.domains.broker.services.file_service import FileService
+from src.domains.broker.services.rabbit_service import RabbitService
+from src.domains.project.services.project_service import ProjectService
 
 
 def get_rabbit_service() -> RabbitService:

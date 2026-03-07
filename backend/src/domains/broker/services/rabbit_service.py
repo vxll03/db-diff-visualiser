@@ -8,9 +8,9 @@ from pydantic import ValidationError
 
 from src.core.config import settings
 from src.core.database import get_db_context
-from src.schemas.rabbit_schemas import IncomingMessageSchema
-from src.services.file_service import FileService
-from src.services.project_service import ProjectService
+from src.domains.broker.rabbit_schemas import IncomingMessageSchema
+from src.domains.broker.services.file_service import FileService
+from src.domains.project.services.project_service import ProjectService
 
 
 class RabbitService:
@@ -21,6 +21,10 @@ class RabbitService:
         if self._connection is None or self._connection.is_closed:
             self._connection = await aio_pika.connect_robust(settings.rabbit.URL)
         return self._connection
+
+    async def close_connection(self):
+        if self._connection is not None and not self._connection.is_closed:
+            await self._connection.close()
 
     async def publish_tasks(self, tasks: list[dict]):
         connection = await self._get_connection()
@@ -34,7 +38,7 @@ class RabbitService:
                     "project": task["project_name"],
                     "target_revision": task["revision"],
                     "prev_revision": task["down_revision"],
-                    "type": "alembic" # TODO Поменять когда буду делать Django
+                    "type": "alembic",  # TODO Поменять когда буду делать Django
                 }
 
                 await channel.default_exchange.publish(

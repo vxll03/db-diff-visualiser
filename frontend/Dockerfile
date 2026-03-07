@@ -4,6 +4,8 @@ COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
 
+ENV NUXT_PUBLIC_API_BASE_URL="/api"
+
 RUN npx nuxi prepare
 RUN npm run generate
 

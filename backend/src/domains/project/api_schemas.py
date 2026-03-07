@@ -1,7 +1,6 @@
 import datetime as dt
 
 from pydantic import BaseModel, ConfigDict
-
 from src.utils.enums import RabbitTaskStatus
 
 
@@ -14,6 +13,7 @@ class MigrationUploadDetailSchema(BaseModel):
     revision: str
     down_revision: str | None
 
+
 class MigrationUploadResponseSchema(BaseModel):
     status: RabbitTaskStatus
     processed_count: int
@@ -24,6 +24,7 @@ class MigrationUploadResponseSchema(BaseModel):
 class ProjectCreateSchema(BaseModel):
     name: str
     icon: str | None
+
 
 class ProjectUpdateSchema(BaseModel):
     name: str | None = None
@@ -49,6 +50,7 @@ class ProjectStatsResponseSchema(BaseOrmModel):
     mat_views_count: int
     functions_count: int
 
+
 # endregion
 
 
@@ -67,6 +69,7 @@ class SnapshotResponseSchema(BaseOrmModel):
     functions_diff_data: dict | None
     triggers_data: dict | None
     triggers_diff_data: dict | None
+
 
 class SnapshotTitleResponseSchema(BaseOrmModel):
     id: int

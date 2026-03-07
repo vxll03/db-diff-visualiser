@@ -24,11 +24,11 @@
               <div class="btn-content">
                 <div class="btn-left">
                   <div class="icon-wrapper">
-                    <Icon name="ph:user-bold" size="14" color="#040E07" />
+                    <Icon name="ph:user-bold" size="14" :color="DARK" />
                   </div>
                   <span>My Account</span>
                 </div>
-                <Icon name="ph:caret-right" size="16" color="#727379" />
+                <Icon name="ph:caret-right" size="16" :color="GRAY" />
               </div>
             </n-button>
           </n-dropdown>
@@ -45,11 +45,11 @@
 <script setup lang="ts">
   import type { MenuOption } from 'naive-ui';
   import { useProjectsQuery } from '@/composables/useProjects';
-  
+
   const route = useRoute();
   const NuxtLink = resolveComponent('NuxtLink');
   const Icon = resolveComponent('Icon');
-  
+
   const renderIcon = (iconName: string) => {
     return () => h(Icon, { name: iconName, size: '18' });
   };

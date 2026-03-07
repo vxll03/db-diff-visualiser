@@ -6,7 +6,7 @@
 
     <div v-else-if="latestSnapshots && latestSnapshots.length > 0" class="check-list">
       <div v-for="snap in latestSnapshots" :key="snap.id" class="check-item">
-        <NuxtLink :to="`/projects/${snap.project_id}`" class="db-name link">
+        <NuxtLink :to="`/projects/${snap.project_id}/${snap.id}`" class="db-name link">
           {{ snap.project_name }}
         </NuxtLink>
 

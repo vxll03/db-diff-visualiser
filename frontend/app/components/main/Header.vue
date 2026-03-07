@@ -16,7 +16,7 @@
 </script>
 
 <style lang="scss" scoped>
-.page-header {
+  .page-header {
     display: flex;
     justify-content: space-between;
     align-items: center;

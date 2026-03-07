@@ -1,9 +1,9 @@
 <template>
   <div class="schema-page">
     <projects-schema-canvas
-    v-model:revision-id="revisionId"
-    v-model:nodes="nodes"
-    v-model:edges="edges"
+      v-model:revision-id="revisionId"
+      v-model:nodes="nodes"
+      v-model:edges="edges"
     />
     <projects-time-line
       v-model:set-show="isModalVisible"
@@ -15,14 +15,21 @@
 </template>
 
 <script setup lang="ts">
-  const nodes = ref<any[]>([]);
-  const edges = ref<any[]>([]);
-  const revisionId = ref<number | null>(null);
+  import type { Node, Edge } from '@vue-flow/core';
+  import type { TableNodeData, ViewNodeData } from '@/schemas/parser.schema';
+
+  const route = useRoute();
+  
+  const nodes = ref<Node<TableNodeData | ViewNodeData>[]>([]);
+  const edges = ref<Edge[]>([]);
+  
+  const revisionId = ref<number | null>(Number(route.params.snap_id) || null);
   const isModalVisible = ref<boolean>(false);
 
-  const selectRevision = () => {
+  const selectRevision = (newSnapId: number) => {
     nodes.value = [];
     edges.value = [];
+    navigateTo(`/projects/${route.params.id}/${newSnapId}`);
   };
 </script>
 

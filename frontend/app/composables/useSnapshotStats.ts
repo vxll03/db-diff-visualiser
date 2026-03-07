@@ -8,6 +8,6 @@ export const useSnapshotStatsQuery = () => {
     queryFn: async (): Promise<SnapshotCount[]> => {
       const data = await apiClient('/snapshots/count_by_date');
       return SnapshotCountResponseSchema.parse(data);
-    }
+    },
   });
 };

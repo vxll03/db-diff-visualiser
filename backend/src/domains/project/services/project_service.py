@@ -3,9 +3,9 @@ from typing import Sequence
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.models.models import Project, Snapshot
-from src.repositories.project_repository import ProjectRepository
-from src.schemas.api_schemas import LatestSnapshotsResponseSchema, ProjectUpdateSchema
+from src.domains.project.repositories.project_repository import ProjectRepository
+from src.domains.project.models import Project, Snapshot
+from src.domains.project.api_schemas import LatestSnapshotsResponseSchema, ProjectUpdateSchema
 
 
 class ProjectService:

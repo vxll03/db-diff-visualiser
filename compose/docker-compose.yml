@@ -46,7 +46,7 @@ services:
       - DB__USER=${DB__USER}
       - DB__PASS=${DB__PASS}
       - DB__NAME=${DB__NAME}
-      # - CORS_ORIGINS=["frontend"]
+      - CORS_ORIGINS=${CORS_ORIGINS}
       - SHARED_MIGRATIONS_DIR=/app/migrations_storage
       - PYTHONPATH=/app:/app/src
     volumes:

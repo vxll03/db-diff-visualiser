@@ -71,7 +71,7 @@
   const { mutate: editProjectMutate } = useUpdateProject();
   const { mutate: deleteProjectMutate } = useDeleteProject();
   const { data: projects, isLoading } = useProjectsQuery();
-  const message = useMessage()
+  const message = useMessage();
 
   const editingId = ref<number | null>(null);
   const editNameValue = ref<string>('');
@@ -85,7 +85,7 @@
 
   const saveEdit = (project: any) => {
     if (!editingId.value) return;
-    
+
     const newName = editNameValue.value.trim();
     if (!newName || newName === project.name) {
       editingId.value = null;
@@ -96,12 +96,15 @@
     project.name = newName;
     editingId.value = null;
 
-    editProjectMutate({ id: project.id, name: newName }, {
-      onError: () => {
-        project.name = oldName;
-        message.error('Failed to update project')
-      }
-    });
+    editProjectMutate(
+      { id: project.id, name: newName },
+      {
+        onError: () => {
+          project.name = oldName;
+          message.error('Failed to update project');
+        },
+      },
+    );
   };
 
   const executeDelete = (project: any) => {
@@ -111,8 +114,8 @@
     deleteProjectMutate(project.id, {
       onError: () => {
         (project as any)._isDeleting = false;
-        message.error('Failed to delete project')
-      }
+        message.error('Failed to delete project');
+      },
     });
   };
 
@@ -129,35 +132,36 @@
       {
         key: 'custom-delete',
         type: 'render',
-        render: () => h(
-          'div',
-          {
-            style: {
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '6px 12px',
-              cursor: 'pointer',
-              color: isPendingDelete ? '#ff4d4f' : 'white',
-              transition: 'color 0.2s',
-              minWidth: '120px'
+        render: () =>
+          h(
+            'div',
+            {
+              style: {
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '6px 12px',
+                cursor: 'pointer',
+                color: isPendingDelete ? RED : 'white',
+                transition: 'color 0.2s',
+                minWidth: '120px',
+              },
+              onClick: (e: MouseEvent) => {
+                e.stopPropagation();
+
+                if (isPendingDelete) {
+                  executeDelete(project);
+                } else {
+                  pendingDeleteId.value = project.id;
+                }
+              },
             },
-            onClick: (e: MouseEvent) => {
-              e.stopPropagation();
-              
-              if (isPendingDelete) {
-                executeDelete(project);
-              } else {
-                pendingDeleteId.value = project.id;
-              }
-            }
-          },
-          [
-            renderIcon('ph:trash', isPendingDelete ? '#ff4d4f' : '#e88080')(),
-            h('span', isPendingDelete ? 'Confirm?' : 'Delete')
-          ]
-        )
-      }
+            [
+              renderIcon('ph:trash', isPendingDelete ? RED : RED_SOFT)(),
+              h('span', isPendingDelete ? 'Confirm?' : 'Delete'),
+            ],
+          ),
+      },
     ];
   };
 

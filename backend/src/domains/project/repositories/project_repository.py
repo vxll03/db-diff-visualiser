@@ -6,7 +6,7 @@ from sqlalchemy import Interval, cast, delete, func, literal, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
-from src.models.models import Project, Snapshot
+from src.domains.project.models import Project, Snapshot
 
 
 class ProjectRepository:
@@ -149,7 +149,7 @@ class ProjectRepository:
         stmt = (
             select(Snapshot)
             .options(joinedload(Snapshot.project))
-            .order_by(Snapshot.id.desc())
+            .order_by(Snapshot.created_at.desc())
             .limit(limit)
         )
         result = await self.db.execute(stmt)

@@ -32,7 +32,7 @@
                 @keydown.enter.prevent="handleCreate"
               >
                 <template #suffix>
-                  <Icon :name="formData.icon || 'ph:database'" size="18" style="color: #727379" />
+                  <Icon :name="formData.icon || 'ph:database'" size="18"/>
                 </template>
               </n-input>
             </template>
@@ -71,7 +71,7 @@
 <script setup lang="ts">
   import { ref } from 'vue';
   import { useCreateProject } from '~/composables/useProjects';
-  import type { FormInst } from 'naive-ui'
+  import type { FormInst } from 'naive-ui';
 
   const show = defineModel<boolean>('show', { default: false });
   const showIconPicker = ref(false);
@@ -134,10 +134,10 @@
     padding: 4px;
 
     :deep(.n-button) {
-      color: #eaebeb;
+      color: $white-secondary;
 
       &:hover {
-        color: #11af74;
+        color: $accent;
         background-color: rgba(17, 175, 116, 0.1);
       }
     }
